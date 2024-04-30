@@ -80,12 +80,22 @@ const constraint constraints[] = {
 
 static uint32_t time_since_last_key;
 
+rt_align(RT_ALIGN_SIZE)
+static uint16_t msgPoolKey[16];
+static struct rt_messagequeue mq_key;
+static bool  msgKey;
+
+
 static void key_init(void);
+
+rt_mq_t DG_getKeyMsgQue(void) {
+    return (msgKey == true) ? (rt_mq_t) &mq_key : (rt_mq_t)RT_NULL;
+}
 
 void DG_Init()
 {
     time_since_last_key = DG_GetTicksMs();
-
+    msgKey = false;
     key_init();
 }
 
@@ -101,10 +111,65 @@ uint32_t DG_GetTicksMs()
 
 static void key_init(void)
 {
+    rt_err_t result = rt_mq_init(&mq_key, "queKey",
+                    msgPoolKey,
+                    sizeof(uint16_t),
+                    sizeof(uint16_t)*8,
+                    RT_IPC_FLAG_FIFO);
+
+    if (result != RT_EOK) {
+        rt_kprintf("Error: create message queue for keyevent\r\n");
+    }
+    else {
+        msgKey = true;
+    }
 }
 
-int DG_GetKey(int *pressed, unsigned char *key)
+int DG_GetKey(uint16_t *key)
 {
+    uint16_t keystate = 0;
+    rt_ssize_t count = 0;
+
+    if (msgKey == false || mq_key.entry == 0)
+      return 0;
+
+    count = rt_mq_recv(&mq_key, &keystate, sizeof(keystate), RT_WAITING_NO);
+    if (count) {
+        *key = keystate;
+        return 1;
+#if 0
+      if (keystate & BIT(2)) {
+        rt_kprintf("BTN_START press\r\n");
+      }
+      if (keystate & BIT(3)) {
+        rt_kprintf("BTN_SELECT press\r\n");
+      }
+      if (keystate & BIT(4)) {
+       rt_kprintf("BTN_A press\r\n");
+      }
+      if (keystate & BIT(5)) {
+        rt_kprintf("BTN_B press\r\n");
+      }
+      if (keystate & BIT(6)) {
+        rt_kprintf("BTN_X press\r\n");
+      }
+      if (keystate & BIT(7)) {
+        rt_kprintf("BTN_Y press\r\n");
+      }
+      if (keystate & BIT(8)) {
+        rt_kprintf("DPAD_UP press\r\n");
+      }
+      if (keystate & BIT(9)) {
+        rt_kprintf("DPAD_DOWN press\r\n");
+      }
+      if (keystate & BIT(10)) {
+        rt_kprintf("DPAD_LEFT press\r\n");
+      }
+      if (keystate & BIT(11)) {
+        rt_kprintf("DPAD_RIGHT press\r\n");
+      }
+#endif
+    }
     return 0;
 }
 

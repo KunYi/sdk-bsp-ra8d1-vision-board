@@ -275,64 +275,62 @@ static void UpdateShiftStatus(int pressed, unsigned char key)
     }
 }
 
+static int convertKeyChar(uint32_t i)
+{
+    int map[] = { 0, 0,
+        '\r',  // start,
+        ' ',   // select
+        0,     // A
+        '\t',  // B
+        KEY_RSHIFT, // X
+        0, // Y
+        's', // UP
+        'd', // DOWN
+        'a', // LEF
+        'f', // RIGHT
+        0 };
+    return (i < 12) ? map[i] : 0;
+
+}
+
+static int convertKey(uint32_t i)
+{
+    int map[] = { 0, 0,
+        KEY_ENTER, // start,
+        KEY_BACKSPACE, // select
+        KEY_FIRE, // A
+        KEY_TAB, // B
+        KEY_RSHIFT, // X
+        KEY_ESCAPE, // Y
+        KEY_UPARROW, // UP
+        KEY_DOWNARROW, // DOWN
+        KEY_LEFTARROW, // LEF
+        KEY_RIGHTARROW, // RIGHT
+        0 };
+    return (i < 12) ? map[i] : 0;
+}
 
 void I_GetEvent(void)
 {
     event_t event;
-    int pressed;
-    unsigned char key;
+    uint16_t keystate;
+    static uint16_t old_keystate;
 
 
-    while (DG_GetKey(&pressed, &key))
+    while (DG_GetKey(&keystate))
     {
-        UpdateShiftStatus(pressed, key);
-
-        // process event
-
-        if (pressed)
+        uint16_t keychange = keystate ^ old_keystate;
+        for (uint32_t i = 2; i < 12; i++) // only support bit2 ~ bit11
         {
-            // data1 has the key pressed, data2 has the character
-            // (shift-translated, etc)
-            event.type = ev_keydown;
-            event.data1 = TranslateKey(key);
-            event.data2 = GetTypedChar(key);
-
-            if (event.data1 != 0)
-            {
+            if (keychange & (1<<i)) {
+                event.type = ((keystate) & (1<<i)) ? ev_keydown : ev_keyup;
+                event.data1 = convertKey(i);
+                event.data2 = (event.type == ev_keydown) ? convertKeyChar(i) : 0;
                 D_PostEvent(&event);
             }
         }
-        else
-        {
-            event.type = ev_keyup;
-            event.data1 = TranslateKey(key);
-
-            // data2 is just initialized to zero for ev_keyup.
-            // For ev_keydown it's the shifted Unicode character
-            // that was typed, but if something wants to detect
-            // key releases it should do so based on data1
-            // (key ID), not the printable char.
-
-            event.data2 = 0;
-
-            if (event.data1 != 0)
-            {
-                D_PostEvent(&event);
-            }
-            break;
-        }
+        old_keystate = keystate;
     }
-
-
-                /*
-            case SDL_MOUSEMOTION:
-                event.type = ev_mouse;
-                event.data1 = mouse_button_state;
-                event.data2 = AccelerateMouse(sdlevent.motion.xrel);
-                event.data3 = -AccelerateMouse(sdlevent.motion.yrel);
-                D_PostEvent(&event);
-                break;
-                */
 }
 
 void I_InitInput(void)

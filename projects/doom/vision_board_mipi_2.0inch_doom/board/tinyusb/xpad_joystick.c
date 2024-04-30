@@ -1,12 +1,16 @@
 #include <stdint.h>
 #include <rtthread.h>
 #include <tusb.h>
-
+#include "platform/doomgeneric.h"
 static bool xpad_mounted = false;
 static uint8_t xpad_dev_addr = 0;
 static uint8_t xpad_instance = 0;
 static uint8_t motor_left = 0;
 static uint8_t motor_right = 0;
+
+static uint16_t keystate = 0;
+static uint16_t oldkeystate = 0;
+
 #define PACKET_HEADER_INPUT    (0x20)
 #ifndef BIT
 #define BIT(x)  (1U<<(x))
@@ -66,37 +70,16 @@ void tuh_xpad_umount_cb(uint8_t dev_addr, uint8_t idx)
 void process_xpad(uint8_t const* report, uint16_t len)
 {
   if (report[0] == PACKET_HEADER_INPUT) {
-     // BTN_START
-     if (report[4] & BIT(2)) {
-       rt_kprintf("BTN_START press\r\n");
-     }
-     if (report[4] & BIT(3)) {
-       rt_kprintf("BTN_SELECT press\r\n");
-     }
-     if (report[4] & BIT(4)) {
-       rt_kprintf("BTN_A press\r\n");
-     }
-     if (report[4] & BIT(5)) {
-       rt_kprintf("BTN_B press\r\n");
-     }
-     if (report[4] & BIT(6)) {
-       rt_kprintf("BTN_X press\r\n");
-     }
-     if (report[4] & BIT(7)) {
-       rt_kprintf("BTN_Y press\r\n");
-     }
-     if (report[5] & BIT(0)) {
-       rt_kprintf("DPAD_UP press\r\n");
-     }
-     if (report[5] & BIT(1)) {
-       rt_kprintf("DPAD_DOWN press\r\n");
-     }
-     if (report[5] & BIT(2)) {
-       rt_kprintf("DPAD_LEFT press\r\n");
-     }
-     if (report[5] & BIT(3)) {
-       rt_kprintf("DPAD_RIGHT press\r\n");
-     }
+    rt_mq_t quekey = DG_getKeyMsgQue();
+
+    if (quekey == RT_NULL)
+       return;
+
+    keystate = report[4] + report[5] * 256;
+    if (keystate != oldkeystate) {
+      oldkeystate = keystate;
+      rt_mq_send(quekey, &oldkeystate, sizeof(oldkeystate));
+    }
   }
 }
 
