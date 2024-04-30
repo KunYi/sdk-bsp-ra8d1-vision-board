@@ -219,7 +219,7 @@ void I_InitSound(boolean use_sfx_prefix)
     nomusic = M_CheckParm("-nomusic") > 0;
 
     // Initialize the sound and music subsystems.
-
+    nosound = true;
     if (!nosound && !screensaver_mode)
     {
         // This is kind of a hack. If native MIDI is enabled, set up
