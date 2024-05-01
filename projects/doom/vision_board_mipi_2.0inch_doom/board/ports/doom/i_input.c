@@ -277,37 +277,49 @@ static void UpdateShiftStatus(int pressed, unsigned char key)
 
 static int convertKeyChar(uint32_t i)
 {
-    int map[] = { 0, 0,
-        '\r',  // start,
-        ' ',   // select
-        0,     // A
-        '\t',  // B
-        KEY_RSHIFT, // X
-        0, // Y
-        's', // UP
-        'd', // DOWN
-        'a', // LEF
-        'f', // RIGHT
-        0 };
-    return (i < 12) ? map[i] : 0;
-
-}
-
-static int convertKey(uint32_t i)
-{
-    int map[] = { 0, 0,
+    int map[] = {
+        0,
+        0,
         KEY_ENTER, // start,
         KEY_BACKSPACE, // select
         KEY_FIRE, // A
-        KEY_TAB, // B
+        KEY_USE, // B
         KEY_RSHIFT, // X
         KEY_ESCAPE, // Y
         KEY_UPARROW, // UP
         KEY_DOWNARROW, // DOWN
         KEY_LEFTARROW, // LEF
         KEY_RIGHTARROW, // RIGHT
-        0 };
-    return (i < 12) ? map[i] : 0;
+        KEY_TAB,       //
+        KEY_ESCAPE,
+        KEY_STRAFE_L,
+        KEY_STRAFE_R
+    };
+    return (i < 16) ? map[i] : 0;
+
+}
+
+static int convertKey(uint32_t i)
+{
+    int map[] = {
+        0,
+        0,
+        KEY_ENTER, // start,
+        KEY_BACKSPACE, // select
+        KEY_FIRE, // A
+        KEY_USE, // B
+        KEY_RSHIFT, // X
+        KEY_ESCAPE, // Y
+        KEY_UPARROW, // UP
+        KEY_DOWNARROW, // DOWN
+        KEY_LEFTARROW, // LEF
+        KEY_RIGHTARROW, // RIGHT
+        KEY_TAB,       //
+        KEY_ESCAPE,
+        KEY_STRAFE_L,
+        KEY_STRAFE_R
+    };
+    return (i < 16) ? map[i] : 0;
 }
 
 void I_GetEvent(void)
@@ -320,7 +332,7 @@ void I_GetEvent(void)
     while (DG_GetKey(&keystate))
     {
         uint16_t keychange = keystate ^ old_keystate;
-        for (uint32_t i = 2; i < 12; i++) // only support bit2 ~ bit11
+        for (uint32_t i = 2; i < 16; i++) // only support bit2 ~ bit15
         {
             if (keychange & (1<<i)) {
                 event.type = ((keystate) & (1<<i)) ? ev_keydown : ev_keyup;
