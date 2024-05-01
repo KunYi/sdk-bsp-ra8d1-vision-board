@@ -14,6 +14,7 @@
 
 #define DEBUG_PRINTF    0
 void key_scan_init();
-extern rt_event_t key_event;
+extern rt_mq_t getKeyMQ(void);
+// extern rt_event_t key_event;
 
 #endif

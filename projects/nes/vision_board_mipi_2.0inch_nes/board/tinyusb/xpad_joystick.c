@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <rtthread.h>
 #include <tusb.h>
+#include "port/rt_key_scan.h"
 
 static bool xpad_mounted = false;
 static uint8_t xpad_dev_addr = 0;
@@ -70,7 +71,7 @@ void tuh_xpad_umount_cb(uint8_t dev_addr, uint8_t idx)
 void process_xpad(uint8_t const* report, uint16_t len)
 {
   if (report[0] == PACKET_HEADER_INPUT) {
-    rt_mq_t queKey = RT_NULL;
+    rt_mq_t queKey = getKeyMQ();
 
     if (queKey == RT_NULL)
        return;

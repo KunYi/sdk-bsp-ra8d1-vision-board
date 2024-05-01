@@ -85,9 +85,29 @@ void nes_wait(uint32_t ms)
 
 /* Get a joypad state */
 extern nes_t static_nes;
-static void update_joypad()
+static void update_joypad(nes_t *nes)
 {
+    uint16_t keystate = 0;
+    rt_ssize_t count = 0;
+    rt_mq_t queKey = getKeyMQ();
 
+    // read all key state for MQ
+    while(queKey->entry != 0) {
+        count = rt_mq_recv(queKey, &keystate, sizeof(keystate), RT_WAITING_NO);
+    }
+
+    // set last value into joypad port of nes
+    if (count) {
+        nes->nes_cpu.joypad.ST1 = ((keystate & 0x004U) != 0);
+        nes->nes_cpu.joypad.SE1 = ((keystate & 0x008U) != 0);
+
+        nes->nes_cpu.joypad.A1  = ((keystate & (0x010)) != 0);
+        nes->nes_cpu.joypad.B1  = ((keystate & (0x020)) != 0);
+        nes->nes_cpu.joypad.U1  = ((keystate & (0x100)) != 0);
+        nes->nes_cpu.joypad.D1  = ((keystate & (0x200)) != 0);
+        nes->nes_cpu.joypad.L1  = ((keystate & (0x400)) != 0);
+        nes->nes_cpu.joypad.R1  = ((keystate & (0x800)) != 0);
+    }
 }
 
 #define FREQ 44100
@@ -114,6 +134,7 @@ static void AudioCallback(void *userdata, uint8_t *stream, int len)
 int nes_initex(nes_t *nes)
 {
     key_scan_init();
+
     return 0;
 }
 
@@ -138,5 +159,5 @@ int nes_draw(size_t x1, size_t y1, size_t x2, size_t y2, nes_color_t *color_data
 void nes_frame(nes_t *nes)
 {
     nes_wait(FRAMES_PER_SECOND);
-    update_joypad();
+    update_joypad(nes);
 }
