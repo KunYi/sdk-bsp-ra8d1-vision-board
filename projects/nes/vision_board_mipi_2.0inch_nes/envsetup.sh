@@ -20,3 +20,7 @@ if [ ! -L "libraries" ]; then
 		ln -s $lib_dir ./libraries
 	fi
 fi
+
+pyocd_flash() {
+  pyocd load --target=r7fa8d1bh rtthread.elf
+}

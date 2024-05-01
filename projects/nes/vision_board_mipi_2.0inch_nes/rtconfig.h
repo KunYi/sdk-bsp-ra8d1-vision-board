@@ -128,6 +128,7 @@
 
 /* Using USB */
 
+#define RT_USING_USB
 /* end of Using USB */
 /* end of Device Drivers */
 
@@ -249,6 +250,18 @@
 /* Micrium: Micrium software products porting for RT-Thread */
 
 /* end of Micrium: Micrium software products porting for RT-Thread */
+#define PKG_USING_TINYUSB
+#define PKG_TINYUSB_STACK_SIZE 2048
+#define PKG_TINYUSB_THREAD_PRIORITY 8
+#define PKG_TINYUSB_MEM_SECTION ".data"
+#define PKG_TINYUSB_MEM_ALIGN 4
+#define PKG_TINYUSB_RHPORT_NUM_1
+#define PKG_TINYUSB_RHPORT_NUM 0
+#define PKG_TINYUSB_FULL_SPEED
+#define PKG_TINYUSB_DEVICE_PORT_SPEED 0x0200
+#define PKG_TINYUSB_DEBUG_NO
+#define CFG_TUSB_DEBUG 0
+#define PKG_USING_TINYUSB_V01401
 /* end of system packages */
 
 /* peripheral libraries and drivers */
