@@ -1,0 +1,25 @@
+from building import *
+import os
+import rtconfig
+
+cwd = GetCurrentDir()
+src = Glob('src/*.cpp')
+src += Glob('port/*.cpp')
+CPPPATH = [cwd]
+CPPPATH += [cwd + '/inc']
+CPPPATH += [cwd + '/port']
+
+LOCAL_CFLAGS = ' -DFRONTEND_SUPPORTS_RGB565 -DHAVE_STDINT_H -DINLINE=inline -DLSB_FIRST -DUSE_FRAME_SKIP '
+LOCAL_CXXFLAGS = ' -DFRONTEND_SUPPORTS_RGB565 -DHAVE_STDINT_H -DINLINE=inline -DLSB_FIRST -DUSE_FRAME_SKIP'
+
+if rtconfig.PLATFORM in ['armcc']:
+    LOCAL_CFLAGS += ' --gnu'
+
+group = DefineGroup('vba', src, depend = [''], CPPPATH = CPPPATH, LOCAL_CFLAGS = LOCAL_CFLAGS, LOCAL_CXXFLAGS = LOCAL_CXXFLAGS)
+
+list = os.listdir(cwd)
+for item in list:
+    if os.path.isfile(os.path.join(cwd, item, 'SConscript')):
+        group = group + SConscript(os.path.join(item, 'SConscript'))
+
+Return('group')
