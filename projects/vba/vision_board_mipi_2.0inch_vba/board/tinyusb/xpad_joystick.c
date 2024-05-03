@@ -67,20 +67,20 @@ void tuh_xpad_umount_cb(uint8_t dev_addr, uint8_t idx)
   }
 }
 
-
+extern rt_mq_t getKeyMQ(void);
 void process_xpad(uint8_t const* report, uint16_t len)
 {
   if (report[0] == PACKET_HEADER_INPUT) {
-    // rt_mq_t queKey = getKeyMQ();
+    rt_mq_t queKey = getKeyMQ();
 
-    // if (queKey == RT_NULL)
-    //    return;
+    if (queKey == RT_NULL)
+       return;
 
-    // keystate = report[4] + report[5] * 256;
-    // if (keystate != oldkeystate) {
-    //   oldkeystate = keystate;
-    //   rt_mq_send(queKey, &oldkeystate, sizeof(oldkeystate));
-    // }
+    keystate = report[4] + report[5] * 256;
+    if (keystate != oldkeystate) {
+      oldkeystate = keystate;
+      rt_mq_send(queKey, &oldkeystate, sizeof(oldkeystate));
+    }
   }
 }
 

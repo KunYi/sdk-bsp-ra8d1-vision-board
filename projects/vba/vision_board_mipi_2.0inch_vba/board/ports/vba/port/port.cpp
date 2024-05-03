@@ -12,6 +12,8 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 #include <drv_lcd.h>
+
+rt_mq_t getKeyMQ(void);
 }
 #endif
 
@@ -21,6 +23,9 @@ extern "C" {
 extern "C" void InitGba(void);
 extern "C" void loadRom(void);
 extern "C" void runGBA(void);
+
+static void key_scan_init(void);
+static void update_joypad(void);
 
 #define SDRAM_START (0x68200000UL)
 #define SDRAM_SIZE  (30*1024*1024)
@@ -51,6 +56,7 @@ uint8_t *rom;//[32*1024*1024]
 }
 
 void InitGba(void) {
+  key_scan_init();
   AllocateBuffer();
   CPUSetupBuffers();
   CPUInit(NULL, false);
@@ -72,6 +78,7 @@ void loadRom(void) {
 void runGBA(void) {
     while(1) {
         CPULoop();
+        update_joypad();
         UpdateJoypad();
         rt_thread_mdelay(10);
     }
@@ -119,3 +126,78 @@ void systemOnWriteDataToSoundBuffer(short*, int) {
 // bit0 -> bit11
 // "a", "b", "select", "start", "right", "left", "up", "down",
 // "r", "l",  "turbo", "menu"
+// rt_event_t key_event;
+rt_align(RT_ALIGN_SIZE)
+static uint16_t msgPoolKey[16];
+static struct rt_messagequeue mq_key;
+static unsigned char  msgKey = 0;
+
+static void update_joypad(void)
+{
+    uint16_t keystate = 0;
+    rt_ssize_t count = 0;
+    rt_mq_t queKey = getKeyMQ();
+
+    // read all key state for MQ
+    while(queKey->entry != 0) {
+        count = rt_mq_recv(queKey, &keystate, sizeof(keystate), RT_WAITING_NO);
+    }
+
+    // set last value into joypad port of nes
+    if (count) {
+        uint64_t tmp = 0ULL;
+        if ((keystate & 0x0010) != 0) // A
+          tmp =  1ULL << 0;
+        if ((keystate & 0x0020) != 0) // B
+          tmp |= 1ULL << 1;
+        if ((keystate & 0x0008) != 0)  // SEL
+          tmp |= 1ULL << 2;
+        if ((keystate & 0x0004) != 0)  // START
+          tmp |= 1ULL << 3;
+        if ((keystate & 0x0800) != 0) // RIGHT
+          tmp |= 1ULL << 4;
+        if ((keystate & 0x0400) != 0) // LEFT
+          tmp |= 1ULL << 5;
+        if ((keystate & 0x0100) != 0) // UP
+          tmp |= 1ULL << 6;
+        if ((keystate & 0x0200) != 0) // DOWN
+          tmp |= 1ULL << 7;
+        if ((keystate & 0x1000) != 0) // L
+          tmp |= 1ULL << 8;
+        if ((keystate & 0x2000) != 0) // R
+          tmp |= 1ULL << 9;
+        if ((keystate & 0x0040) != 0) // X
+          tmp =  1ULL << 10;
+        if ((keystate & 0x0080) != 0) // Y
+          tmp |= 1ULL << 11;
+
+        joy = tmp;
+    }
+}
+
+extern "C" {
+
+rt_mq_t getKeyMQ(void) {
+    return (msgKey > 0) ? (rt_mq_t) &mq_key : (rt_mq_t)RT_NULL;
+}
+
+}
+
+
+static void key_scan_init(void)
+{
+    // message queue for key event
+    rt_err_t result = rt_mq_init(&mq_key, "queKey",
+                    msgPoolKey,
+                    sizeof(uint16_t),
+                    sizeof(uint16_t)*8,
+                    RT_IPC_FLAG_FIFO);
+
+    if (result != RT_EOK) {
+        rt_kprintf("Error: create message queue for keyevent\r\n");
+    }
+    else {
+        msgKey = 1;;
+    }
+}
+
