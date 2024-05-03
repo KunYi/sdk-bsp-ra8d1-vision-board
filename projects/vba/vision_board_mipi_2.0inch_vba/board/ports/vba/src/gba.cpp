@@ -646,7 +646,8 @@ static graphics_t graphics;
 static memoryMap map[256];
 static int clockTicks;
 
-static int romSize = 0x2000000;
+//static int romSize = 0x2000000;
+static int romSize = (30 * 1024 * 1024);
 static uint32_t line[6][240];
 static bool gfxInWin[2][240];
 static int lineOBJpixleft[128];

@@ -243,20 +243,20 @@ void drv_sdram_init(void)
 }
 
 #ifdef BSP_USING_SDRAM
-#ifdef RT_USING_MEMHEAP_AS_HEAP
-    struct rt_memheap system_heap;
-#endif
+// #ifdef RT_USING_MEMHEAP_AS_HEAP
+//     struct rt_memheap system_heap;
+// #endif
 
 static int SDRAM_Init(void)
 {
     drv_sdram_init();
 
     LOG_D("sdram init success, mapped at 0x%X, size is %d bytes, data width is %d", 0x68200000, BSP_USING_SDRAM_SIZE - 0x200000, 16);
-#ifdef RT_USING_MEMHEAP_AS_HEAP
-    /* If RT_USING_MEMHEAP_AS_HEAP is enabled, SDRAM is initialized to the heap */
-    /* To avoid stepping on memory in the .sdram section:0x68000000-0x200000  */
-    rt_memheap_init(&system_heap, "sdram", (void *)0x68200000, BSP_USING_SDRAM_SIZE - 0x200000);
-#endif
+// #ifdef RT_USING_MEMHEAP_AS_HEAP
+//     /* If RT_USING_MEMHEAP_AS_HEAP is enabled, SDRAM is initialized to the heap */
+//     /* To avoid stepping on memory in the .sdram section:0x68000000-0x200000  */
+//     rt_memheap_init(&system_heap, "sdram", (void *)0x68200000, BSP_USING_SDRAM_SIZE - 0x200000);
+// #endif
     return RT_EOK;
 }
 INIT_BOARD_EXPORT(SDRAM_Init);
