@@ -29,29 +29,17 @@ uint16_t *pix;//[2 * PIX_BUFFER_SCREEN_WIDTH * 160];
 uint8_t *libretro_save_buf;//[0x20000+0x2000];
 uint8_t *rom;//[32*1024*1024]
 */
-  vram = (uint8_t *)rt_malloc(0x20000);
-  workRAM = (uint8_t *)rt_malloc(0x40000);
-  bios = (uint8_t *)rt_malloc(0x4000);
-  pix = (uint16_t *)rt_malloc(sizeof(uint16_t) * 2 * PIX_BUFFER_SCREEN_WIDTH * 160);
-  libretro_save_buf = (uint8_t *)rt_malloc(0x20000+0x2000);
+  vram = (uint8_t *)rt_malloc(0x20000);    // 128KB
+  workRAM = (uint8_t *)rt_malloc(0x40000); // 256KB
+  bios = (uint8_t *)rt_malloc(0x4000);     // 16KB
+  pix = (uint16_t *)rt_malloc(sizeof(uint16_t) * 2 * PIX_BUFFER_SCREEN_WIDTH * 160); // 160KB
+  libretro_save_buf = (uint8_t *)rt_malloc(0x20000+0x2000); // 128KB + 8KB = 136KB
 
-  #define ROM_SIZE  (4*1024*1024)
-  uint8_t * rom_a = (uint8_t *)rt_malloc(ROM_SIZE);
-  if (rom_a == RT_NULL) {
-    LOG_E("Failed allocate buffer for rom_a\n");
-  }
-  else {
-    LOG_I("rom_a: %p", rom_a);
-  }
-
-  uint8_t * rom_b = (uint8_t *)rt_malloc(ROM_SIZE);
-  if (rom_b == RT_NULL) {
-    LOG_E("Failed allocate buffer for rom_b\n");
-  }
-  else {
-    LOG_I("rom_b: %p", rom_b);
-  }
-
+// ROM space should be equal 32MB
+// but VisionBoard can't support this configuration
+// VisionBoard has a 32MB SDRAM, but first 2MB reserve to Display interface
+#define ROM_SIZE  (28*1024*1024)
+  uint8_t * rom = (uint8_t *)rt_malloc(ROM_SIZE);
   LOG_I("internalRAM: %p, vram: %p, workRAM: %p, bios: %p, pix: %p",
       internalRAM, vram, workRAM, bios, pix);
   LOG_I("libretro_save_buf: %p, rom: %p",
