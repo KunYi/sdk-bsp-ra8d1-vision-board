@@ -762,6 +762,7 @@ static INLINE int codeTicksAccessSeq32(u32 address) // ARM SEQ
 	return memoryWaitSeq32[addr];
 }
 
+// TODO: memory access
 #define CPUReadByteQuick(addr)		map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]
 #define CPUReadHalfWordQuick(addr)	READ16LE(((u16*)&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]))
 #define CPUReadMemoryQuick(addr)	READ32LE(((u32*)&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]))
@@ -1038,7 +1039,7 @@ static INLINE u32 CPUReadHalfWord(u32 address)
 					return rtcRead(address);
 				break;
 			default:
-				value = READ16LE(rom + (address & 0x1FFFFFE)); break;
+				value = READ16LE(rom + (address & 0x1FFFFFE)); break; // TODO: access
 			}
 			break;
 		case 13:
@@ -1112,7 +1113,7 @@ static INLINE u8 CPUReadByte(u32 address)
 		case 10:
 		case 11:
 		case 12:
-			return rom[address & 0x1FFFFFF];
+			return rom[address & 0x1FFFFFF]; // TODO: READ ROM
 		case 13:
          	return eepromRead();
 		case 14:
@@ -1401,9 +1402,9 @@ static void BIOS_ArcTan (void)
 	b = ((b * a) >> 14) + 0x2081;
 	b = ((b * a) >> 14) + 0x3651;
 	b = ((b * a) >> 14) + 0xA2F9;
-   bus.reg[0].I = (i * b) >> 16;
-   bus.reg[1].I = a;
-   bus.reg[3].I = b;
+	bus.reg[0].I = (i * b) >> 16;
+	bus.reg[1].I = a;
+	bus.reg[3].I = b;
 }
 
 static void BIOS_Div (void)
@@ -8836,7 +8837,7 @@ unsigned CPUWriteState(uint8_t* data, unsigned size)
 	uint8_t *orig = data;
 
 	utilWriteIntMem(data, SAVE_GAME_VERSION);
-	utilWriteMem(data, &rom[0xa0], 16);
+	utilWriteMem(data, &rom[0xa0], 16); // TODO:READ ROM
 	utilWriteIntMem(data, useBios);
 	utilWriteMem(data, &bus.reg[0], sizeof(bus.reg));
 
@@ -9053,17 +9054,17 @@ static void applyCartridgeOverride(char* code) {
 static void CPULoadRomGeneric(uint8_t *whereToLoad)
 {
 	int i;
-   char cartridgeCode[4];
-   uint16_t *temp;
+	char cartridgeCode[4];
+	uint16_t *temp;
 
 	//load cartridge code
 	memcpy(cartridgeCode, whereToLoad + 0xAC, 4);
 	applyCartridgeOverride(cartridgeCode);
 
-	temp = (uint16_t *)(rom+((romSize+1)&~1));
+	temp = (uint16_t *)(rom+((romSize+1)&~1)); // TODO: move to romSize and align 2bytes
 
 	for(i = (romSize+1)&~1; i < 0x2000000; i+=2)
-   {
+	{
 		WRITE16LE(temp, (i >> 1) & 0xFFFF);
 		temp++;
 	}
@@ -9198,7 +9199,7 @@ void doMirroring (bool b)
 			mirroredRomSize=0x100000;
 		while (mirroredRomAddress<0x01000000)
 		{
-			memcpy((uint16_t *)(rom+mirroredRomAddress), (uint16_t *)(rom), mirroredRomSize);
+			memcpy((uint16_t *)(rom+mirroredRomAddress), (uint16_t *)(rom), mirroredRomSize); // TODO: check the mapping
 			mirroredRomAddress+=mirroredRomSize;
 		}
 	}
@@ -11580,7 +11581,7 @@ bool CPUReadState(const uint8_t* data, unsigned size)
 
 	char romname[16];
 	utilReadMem(romname, data, 16);
-	if (memcmp(&rom[0xa0], romname, 16) != 0)
+	if (memcmp(&rom[0xa0], romname, 16) != 0) // TODO: read
 		return false;
 
 	// Don't care about use bios ...
@@ -12570,7 +12571,7 @@ void CPUInit(const char *biosFileName, bool useBiosFile)
 	for(i = 0x304; i < 0x400; i++)
 		ioReadable[i] = false;
 
-	if(romSize < 0x1fe2000) {
+	if(romSize < 0x1fe2000) { // TODO: READ/SET ROM
 		*((uint16_t *)&rom[0x1fe209c]) = 0xdffa; // SWI 0xFA
 		*((uint16_t *)&rom[0x1fe209e]) = 0x4770; // BX LR
 	}
@@ -12831,13 +12832,13 @@ void CPUReset (void)
 	map[6].mask = 0x1FFFF;
 	map[7].address = oam;
 	map[7].mask = 0x3FF;
-	map[8].address = rom;
+	map[8].address = rom;  // TODO: MAPPING ROM to map[8]
 	map[8].mask = 0x1FFFFFF;
-	map[9].address = rom;
+	map[9].address = rom;  // TODO: MAPPING ROM to map[9]
 	map[9].mask = 0x1FFFFFF;
-	map[10].address = rom;
+	map[10].address = rom; // TODO: MAPPING ROM to map[10]
 	map[10].mask = 0x1FFFFFF;
-	map[12].address = rom;
+	map[12].address = rom; // TODO: MAPPING ROM to map[12]
 	map[12].mask = 0x1FFFFFF;
 	map[14].address = flashSaveMemory;
 	map[14].mask = 0xFFFF;
@@ -13682,6 +13683,7 @@ u8 v3_deadtable2[256] = {
     0xFC, 0x31, 0x09, 0x48, 0xA3, 0xFF, 0x92, 0x12, 0x58, 0xE9, 0xFA, 0xAE, 0x4F, 0xE2, 0xB4, 0xCC
 };
 
+// TODO: memory access
 #define debuggerReadMemory(addr) \
   READ32LE((&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]))
 
@@ -13703,9 +13705,11 @@ u8 v3_deadtable2[256] = {
 
 #define CHEAT_IS_HEX(a) ( ((a)>='A' && (a) <='F') || ((a) >='0' && (a) <= '9'))
 
+// TODO: PATCH ROM
 #define CHEAT_PATCH_ROM_16BIT(a,v) \
   WRITE16LE(((u16 *)&rom[(a) & 0x1ffffff]), v);
 
+// TODO: PATCH ROM
 #define CHEAT_PATCH_ROM_32BIT(a,v) \
   WRITE32LE(((u32 *)&rom[(a) & 0x1ffffff]), v);
 
@@ -15009,13 +15013,13 @@ void cheatsAddGSACode(const char *code, const char *desc, bool v3)
   cheatsDecryptGSACode(address, value, v3);
 
   if(value == 0x1DC0DE) {
-    u32 gamecode = READ32LE(((u32 *)&rom[0xac]));
+    u32 gamecode = READ32LE(((u32 *)&rom[0xac])); // TODO: READ rom[0xac]
     if(gamecode != address) {
       char buffer[5];
       *((u32 *)buffer) = address;
       buffer[4] = 0;
       char buffer2[5];
-      *((u32 *)buffer2) = READ32LE(((u32 *)&rom[0xac]));
+      *((u32 *)buffer2) = READ32LE(((u32 *)&rom[0xac])); // TODO: READ rom[0xac]
       buffer2[4] = 0;
       systemMessage("Warning: cheats are for game %s. Current game is %s.\nCodes may not work correctly.",
                     buffer, buffer2);
@@ -15686,7 +15690,7 @@ void cheatsCBAGenTable() {
   cheatsCBATableGenerated = true;
 }
 
-u16 cheatsCBACalcCRC(u8 *rom, int count)
+u16 cheatsCBACalcCRC(u8 *rom, int count) // TODO: caller passed "rom"
 {
   u32 crc = 0xffffffff;
 
@@ -15846,7 +15850,7 @@ void cheatsAddCBACode(const char *code, const char *desc)
       {
         if(!cheatsCBATableGenerated)
           cheatsCBAGenTable();
-        u32 crc = cheatsCBACalcCRC(rom, 0x10000);
+        u32 crc = cheatsCBACalcCRC(rom, 0x10000); // TODO: Patch ROM
         if(crc != address) {
           systemMessage("Warning: Codes seem to be for a different game.\nCodes may not work correctly.");
         }
